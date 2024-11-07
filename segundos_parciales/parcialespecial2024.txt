@@ -1,0 +1,50 @@
+vaddrs is_Mapped(int32_t cr3, paddr_t phy){
+  pdt_entry* pde = CR3_TO_PAGE_DIRECTORY(cr3);
+  vaddrs return_addrs;
+  for(int i = 0; i < 1024; i++){
+    if(pde[i].attrs & MMU_P){
+      return_addrs |= pde[i] << 22;	
+      pte_entry* pte = pde[i].pt;
+      for(int j = 0; j < 1024; j++){
+        if(!(pte[j].attrs & P) & phy == pte[j].page){
+          return_addrs |= pte[j] << 12;	
+          return return_addrs;
+        }
+      }
+    }
+  }
+  return -1;
+}
+
+
+int32_t mmu_map_secure_page(uint32_t cr3, vaddr_t virt, paddr_t phy, int32_t hash){
+	for(int i = 0; i <  MAX_TASKS;i++){
+		tss_t* tss_task = obtener_TSS(sched_tasks[i].selector);
+		
+		uint32_t task_cr3 = tss_task->cr3;
+		if(is_Mapped(task_cr3,phy) & task_cr3 != cr3){
+			uint32 hash2 = tss_task->ebx; // hash de la tarea
+			if(hash2 == hash){
+				mmu_map_page(cr3, virt,phy, MMU_P);
+				return hash;
+			}
+			return -1;
+		}
+	}
+	mmu_map_page(cr3,virt,phy,MMU_P);
+	
+	secure_page_t* new_page;
+	new_page->paddr = phy;
+	new_page->write_key = hash;
+	for(int i = 0; i < secure_pages.size();i++){
+		if(!(secure_pages[i])){
+			secure_pages[i] = new_page;
+		}
+	}
+	return hash;
+	
+}
+
+
+
+

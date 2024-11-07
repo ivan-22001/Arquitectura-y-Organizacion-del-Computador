@@ -1,0 +1,104 @@
+1) 
+_isr99
+	pushad
+	call current_task_called
+	
+	call verificar_tareas_completadas
+	jne .saltoSiguiente
+	
+	push [selector_task6]
+	call enable_task
+	call disable_current_task
+	
+	add esp, 4
+	str bx
+    	cmp [task6_sel], bx
+    	je .fin
+
+    	mov word [task6_sel], ax
+    	jmp far [offset]
+
+	jmp .fin
+	
+	.saltoSiguiente:
+	call disable_current_task
+	call sched_next_task
+    	cmp ax, 0
+    	je .fin
+
+    	str bx
+    	cmp ax, bx
+    	je .fin
+
+    	mov word [sched_task_selector], ax
+    	jmp far [sched_task_offset]
+
+
+	.fin:
+	popad
+	iret
+	
+bool flags[Max_Tasks - 1] = {false}; // inicializo el vector y saco la tarea 6	
+void current_task_called(uint8_t id){
+	flags[id] = true;
+}
+
+bool verificar_tareas_completadas(){
+	for(int i = 0; i < Max_Tasks - 1; i++){
+		if(!flags[i]) return false;
+	}
+	return true;
+}
+
+task6(){
+	uint32_t res = procesoDatos();
+	for(int i = 0; i < Max_tasks -1; i++){
+		tss_t* tss = obtenerTss(sched_tasks[i].sel);
+		tss->eax = res;
+	}
+	disable_current_task();
+	enable_all_tasks;
+	current_task = 0;
+	for(int i = 0; i < Max_task-1 ; i++){
+		flags[i] = false;
+	}
+	
+}
+
+sched_next_task(){
+	if(sched_tasks[task6_id].state == runnable){
+		return sched_tasks[task6_id].sel;
+	}
+	....
+}
+
+
+2)
+vaddr_t* paginas_modificadas(int32_t cr3){
+	uint32_t dirt = 0; 
+	for(int i = 0; i < 1024; i++){
+		vaddr_t dir = pd[i] & 0xFFC00000;
+		if(pd[i].attrs & MMU_P){
+			pt_entry* pt = pd[i].pt << 12
+			for(int j = 0; j < 1024; j++){
+				if(pt[j].attrs & MMU_D){
+				   dirt++;
+				}
+			}
+	}
+	vaddr_t* res[dirt];
+	uint32_t ind = 0;
+	pd_entry* pd = CR3_TO_Page(cr3);
+	
+	for(int i = 0; i < 1024; i++){
+		if(pd[i].attrs & MMU_P){
+			pt_entry* pt = pd[i].pt << 12
+			for(int j = 0; j < 1024; j++){
+				if(pt[j].attrs & MMU_D & MMU_P){
+				   dir = (i<<22)|(j<<12);
+				   res[ind++] = dir;
+				}
+			}
+	}
+	return res;
+}
