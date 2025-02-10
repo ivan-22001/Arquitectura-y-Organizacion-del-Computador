@@ -1,0 +1,75 @@
+Coherencia de Cache :
+      - Explicar cuándo empezamos a tener problemas con la coherencia y cuál es el problema de tener incoherentes la memoria con las caches.
+        Empezamos a tener problemas de coherencia a la hora de escribir sobre una variable, ya que su valor se va a modificar y en el resto de los niveles inferiores de jerarquia dejara de cumplirse 
+        la coherencia.
+        El problema de coherencia surge cuando varias cachés (asociadas a diferentes núcleos o procesadores) tienen copias del mismo bloque de memoria,
+        y al menos una de ellas realiza una escritura. Si no se gestiona adecuadamente, esto puede llevar a inconsistencias en los datos,
+        lo que afecta la correcta ejecución de los programas.
+        Cuando la memoria y las caches estan incoherentes puede generar lecturas incorrectas al no haber consistencia en los valores, 
+        va a haber inconsistencia en los datos.
+ 
+    -Explicar las diferentes políticas de escritura, comparándolas según el uso de procesador y el uso del bus.
+    ¿Cuál es más apta para un sistema Monoprocesador y cuál para un sistema SMP? Justificar.
+   Las politicas de escritura que hay son Write through: el dato se escribe en el Cache y en el nivel inferior de la jerarquia;
+  y Write Back: El dato se escribe solo en el cache, y se actualiza en el resto de la - solo cuando es desalojado
+      
+       - Explicar cómo se podría utilizar Copy Back en un sistema SMP.
+        Se necesitarian protocolos de coherencia para poder realizar el copy back.
+        Para resolver el problema de coherencia, se utilizan protocolos como MESI (Modified, Exclusive, Shared, Invalid) o MOESI (Modified, Owned, Exclusive, Shared, Invalid). Estos protocolos definen el estado de cada bloque de caché y coordinan las operaciones de lectura y escritura entre los núcleos.
+        Estados del protocolo MESI:
+    Modified (M): Modified significa que la lı́nea ha sido modificada en el Cache local. Como este protocolo es write-invalidate, éste estado es además
+    Exclusivo.
+    Este núcleo es responsable de escribir el bloque en la memoria principal cuando sea necesario.
+
+    Exclusive (E): El bloque está solo en esta caché y coincide con la memoria principal.
+
+    Shared (S): El bloque está en varias cachés y coincide con la memoria principal.
+
+    Invalid (I): El bloque no es válido (obsoleto o no presente).
+
+
+
+        -¿Qué entiende por snooping y con qué elementos se implementa?¿Cómo se complementa con el protocolo MESI?¿Qué cosas se tienen que agregar a nivel de HW para implementar MESI (snoop bus, Shared, RFO)?
+        
+        -En el protocolo MESI, ¿qué significa el estado Modified?
+          Lı́nea presente solamente en éste cache que varió respecto de su valor en memoria del sistema (dirty).
+          Requiere write back hacia la memoria del sistema antes que otro procesador lea desde allı́ el dato (que ya no es válido).
+        
+        -MESI, tenés una línea en estado Shared, ¿qué significa?¿Qué pasa si la querés escribir?¿Es impreciso?
+        Significa que la lı́nea del cache presente y puede estar almacenada en los caches de otros procesadores.
+        Si la queres escribir todas las caches que tienen esa linea la tienen que invalidar previamente. La cache local la pone en estado modified y luego la 
+        escritura en la memoria principal se retrasa hasta que el bloque sea reemplazado o invalidado (esto es parte de la política Copy-Back o Write-Back).
+
+        -Si un procesador quiere leer una línea que él no tiene pero otro cache tiene en estado Modified, ¿qué secuencia de cosas pasan?
+        En caso que algún otro cache tenga la nueva lı́nea, al propagarse el Read Miss por el Bus, el owner
+        podrá espiar esta transacción y activar la lı́nea Shared para advertirle al controlador local que el Ownership de la lı́nea
+        será compartido y el controlador local cambiará el estado de la lı́nea a Shared. El resto del procedimiento es idéntico,
+        inlcuido el (Write Back), a fin de mantener su Coherencia.
+
+    -¿Qué pasa si un procesador escribe en una linea con Modified?
+    ¿Cómo afecta a la performance si se usa un protocolo con Write/copy back comparado con Write through?
+      Cuando un procesador escribe en una línea de caché marcada como Modified, esto significa que la copia de la línea en la caché ha sido modificada en relación con la copia en la memoria principal. 
+      Según los protocolos de coherencia de caché, una línea de caché se marca como Modified (M) cuando ha sido escrita en la caché,
+      y la memoria principal no tiene la versión actualizada de esa línea. 
+      Esto indica que la línea en la caché está sucia y debe escribirse de vuelta en la memoria cuando se realice una actualización o cuando la caché sea reemplazada.
+    
+    Predicción de Saltos :
+        ¿Cómo funciona un predictor de saltos de 2 bits? Motivación y funcionamiento. Incluir diagrama y transiciones de estado.
+        ¿En qué situaciones funciona bien un predictor de saltos de 2 bits y mal uno de 1 bit?
+        ¿Por qué usar un predictor de 2 bits y no uno de 1 bit, 3 bits, spec89, etc?
+
+    Ejecución Fuera de Orden
+        Concepto y funcionamiento general.¿Qué nuevas dependencias se introducen con la ejecución fuera de orden?
+        Ventajas respecto de un esquema superescalar con ejecución en orden. Considerar que ambos modelos tienen la misma cantidad de vías de ejecución.
+
+    Algoritmo de Tomasulo
+        ¿Cuándo se debe stallear una instrucción?
+        Explicar cuáles son los bloques de hardware que se agregan a un procesador superescalar, qué riesgos resuelve, y cómo funciona cada uno.
+        ¿Qué elementos tiene una Reservation Station?
+        ¿Cómo se establece la relación consumidor/productor según Tomasulo?¿Dónde está el tag o a qué hace referencia?
+        Detallar secuencia de pasos para ejecutar una instrucción.
+
+    Reorder Buffer
+        ¿Qué le faltó al algoritmo de Tomasulo para tener excepciones precisas?
+        ¿Qué elementos tiene un reorder buffer?
+        Explicar la implementación de Intel del Algoritmo de Tomasulo en el Three Cores Engine, detallando cada parte involucrada.
