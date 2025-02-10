@@ -29,8 +29,21 @@ Coherencia de Cache :
 
 
 
-        -¿Qué entiende por snooping y con qué elementos se implementa?¿Cómo se complementa con el protocolo MESI?¿Qué cosas se tienen que agregar a nivel de HW para implementar MESI (snoop bus, Shared, RFO)?
-        
+        -¿Qué entiende por snooping y con qué elementos se implementa?
+      ¿Cómo se complementa con el protocolo MESI?¿Qué cosas se tienen que agregar a nivel de HW para implementar MESI (snoop bus, Shared, RFO)?
+            Snooping es un protocolo de coherencia el cual todos los cores pueden monitorear que hace el resto de los cores
+            mediante un bus dedicado. Consiste en que cada procesador "espía" (snoop) las transacciones en el bus del sistema para detectar si otra CPU 
+            está accediendo a una dirección de memoria que también está almacenada en su propia caché. Si se detecta una operación que podría afectar la coherencia
+            Los elementos que se implementa es un bus compartido el cual va al controlador cache para que cada uno monitoree las transacciones relacionadas a su memoria cache
+            y protocolos de coherencia: Se utilizan protocolos como MESI para definir cómo se manejan los estados de las líneas de caché y cómo se resuelven los conflictos.
+            MESI es uno de los tantos protocolos que hay que se usa para manejar los estados y saber como resolver conflictos de lectura o escritura.
+            El snooping permite que cada procesador observe las transacciones en el bus y actualice el estado de sus líneas de caché según el protocolo MESI.
+            Por ejemplo, si un procesador escribe en una dirección de memoria, el snooping detecta esta operación y notifica a otros procesadores que tienen esa línea en su caché, 
+            cambiando su estado a Invalid (I) si es necesario. 
+            Hay que agregar el snoop bus. Los bits de estado para aplicar el protocolo MES;     Se necesita hardware adicional en el controlador de caché para implementar la lógica del protocolo MESI.
+            Esto incluye la capacidad de cambiar el estado de las líneas de caché y generar las señales necesarias en el bus (por ejemplo, para solicitar una línea en estado Shared o Invalid).
+            Operaciones RFO (Read For Ownership): Cuando un procesador necesita escribir en una línea de caché que está en estado Shared o Invalid, debe realizar una operación RFO.
+
         -En el protocolo MESI, ¿qué significa el estado Modified?
           Lı́nea presente solamente en éste cache que varió respecto de su valor en memoria del sistema (dirty).
           Requiere write back hacia la memoria del sistema antes que otro procesador lea desde allı́ el dato (que ya no es válido).
@@ -55,7 +68,56 @@ Coherencia de Cache :
     
     Predicción de Saltos :
         ¿Cómo funciona un predictor de saltos de 2 bits? Motivación y funcionamiento. Incluir diagrama y transiciones de estado.
+        Se implemento este modeo para mejorar el rendimiento del Branch Prediction Buffer 
+        ya que su modelo inicial era prediccion simple de a un bit que lo limitaba porque cuando un salto siempre
+        resulta taken, y falla una vez produce dos predicciones fallidas seguidas, ya que el bit
+        se invierte.
+       Su funcionamiento se basa en 4 estados los cuales son Taken que puede ser prediccion fuerte o debil
+      como tambien el estado non-taken.
+      Ejemplo de transiciones:
+    Si el predictor está en Strongly Not Taken (00) y el salto no se toma, permanece en Strongly Not Taken.
+    Si el predictor está en Weakly Not Taken (01) y el salto se toma, avanza a Weakly Taken (10).
+    Si el predictor está en Weakly Taken (10) y el salto no se toma, retrocede a Weakly Not Taken (01).
+    Si el predictor está en Strongly Taken (11) y el salto se toma, permanece en Strongly Taken.
+            Diagrama:
+          +-------------------+
+          |                   |
+          |  Strongly Not Taken (00)
+          |                   |
+          +---------+---------+
+                    |
+                    | Salto no tomado
+                    v
+          +---------+---------+
+          |                   |
+          |  Weakly Not Taken (01)
+          |                   |
+          +---------+---------+
+                    |
+                    | Salto no tomado
+                    v
+          +---------+---------+
+          |                   |
+          |  Weakly Taken (10)
+          |                   |
+          +---------+---------+
+                    |
+                    | Salto tomado
+                    v
+          +---------+---------+
+          |                   |
+          |  Strongly Taken (11)
+          |                   |
+          +---------+---------+
+                    |
+                    | Salto tomado
+                    v
+          +-------------------+
+
         ¿En qué situaciones funciona bien un predictor de saltos de 2 bits y mal uno de 1 bit?
+      Cuando un salto siempre resulta taken y falla una vez produce dos predicciones fallidas seguidas, 
+      ya que el bit se invierte.
+
         ¿Por qué usar un predictor de 2 bits y no uno de 1 bit, 3 bits, spec89, etc?
 
     Ejecución Fuera de Orden
