@@ -117,19 +117,75 @@ Coherencia de Cache :
         ¿En qué situaciones funciona bien un predictor de saltos de 2 bits y mal uno de 1 bit?
       Cuando un salto siempre resulta taken y falla una vez produce dos predicciones fallidas seguidas, 
       ya que el bit se invierte.
+      Si un salto cambia ocasionalmente su comportamiento (por ejemplo, un bucle que normalmente toma el salto, pero en algunas iteraciones no lo hace), 
+      el predictor de 2 bits puede manejar mejor estas excepciones.
+      En programas con muchos saltos condicionales y comportamientos variables, el predictor de 2 bits tiende a ser más preciso porque puede "recordar" 
+      más historia sobre cada salto individual.
 
         ¿Por qué usar un predictor de 2 bits y no uno de 1 bit, 3 bits, spec89, etc?
+      Porque tiene una eficiencia del 82%, luego el predictor de 1 bit puede fallar en patrones repetitivos como Taken, No-Taken,Taken,No-Taken,...
+      Luego los demas hay que agregar mas hardware y es mas costoso a nivel energia y solo se usaria para procesadores que hagan cosas muy complejas,
+      que por lo general son muy pocas veces. Entonces se opto por el de 2 bits que es el mas eficiente y menos costoso.
+       
 
     Ejecución Fuera de Orden
         Concepto y funcionamiento general.¿Qué nuevas dependencias se introducen con la ejecución fuera de orden?
+         Ejecutar instrucciones Fuera de Orden consiste, tal como es de esperar, en tratar de enviar las instrucciones a ejecución independientemente del orden en el que están
+         en el código. Por ejemplo, Quizas haya instrucciones que no necesiten de los operandos de las anteriores, en un esquema en orden tiene que esperar a que termine esa operacion
+        para poder ejecutarse, en out of order no es asi, si depende sus operandos de las instrucciones anteriores debera esperar, pero sino puede seguir ejecutando.
+        Esto puede conllevar a riesgos, y son 3 RAW, WAW y WAR.
+      Funcionamiento general:
+    El procesador obtiene instrucciones desde la memoria (fetch).
+    El decodificador de instrucciones las analiza.
+    Las instrucciones se envían a una unidad de reserva o banco de registros.
+    Las instrucciones se reorganizan para ejecutar aquellas que no dependen de instrucciones anteriores.
+    Una vez que las dependencias de las instrucciones pendientes se resuelven, se ejecutan en el orden correcto.
+      Se introdujeron la dependencia de datos, eso quiere decir que hasta que una instruccion necesite datos de una anterior debera esperar para que no se sobreescriban los datos
+      dependencia de control, Las decisiones de salto o bifurcación (branching) pueden afectar las instrucciones que se ejecutan en paralelo. Para manejar esto,
+      los procesadores fuera de orden utilizan técnicas de predicción de saltos. Si la predicción es incorrecta, las instrucciones ejecutadas de forma incorrecta deben ser deshechas.
+      
         Ventajas respecto de un esquema superescalar con ejecución en orden. Considerar que ambos modelos tienen la misma cantidad de vías de ejecución.
+      Se hace mayor uso del procesador al agilizar el procesamiento de instrucciones, en ejecucion de orden si una instruccion no termino para la ejecucion de las demas, realentizando
+      el programa; ejecucion fuera de orden aprovecha mas los ciclos de reloj que un esquema en orden.
 
     Algoritmo de Tomasulo
         ¿Cuándo se debe stallear una instrucción?
+       Cuando haya algun hazard, ya sea obstaculos estructurales, de datos o control. Ya que la instruccion no se puede llevar a cabo por dependencias. 
+      De datos seria algun dato que necesita de instruccion anterior y modifica al operando y usa ese mismo, estructural cuando dos instrucciones intentan acceder a la memoria al mismo tiempo
+      y control cuando hay una mala prediccion de salto.
+      
         Explicar cuáles son los bloques de hardware que se agregan a un procesador superescalar, qué riesgos resuelve, y cómo funciona cada uno.
+      Se agregan un banco de register alias table(RAT) y reservations stations(RS) el cual resuelve los riesgos de WAW, WAR. Estos funcionan de la siguiente manera
+      El RAT consiste en una tabla con una entrada por cada registro arquitectural, de manera tal que permita almacenar el ultimo tag correspondiente a cada registro,
+      para que la proxima instruccion a despachar sepa como referenciar a la instancia actual de cada uno de sus operandos. Las entradas de la
+      RAT contenian tres campos: el campo tag, el campo valor y un bit de validez.
+      El RAT es donde el procesador almacena todas aquellas instrucciones que no estan Ready. En particular, vamos a tener el
+      codigo de operacion y para cada operando vamos a tener la misma estructura del RAT: un tag, un valor,y un bit de validez.
+      Hasta que el campo de validez no diga 1, ese operando no esta Ready. Cuando todos los campos de
+      validez de todos los operandos estan en 1, la instruccion esta Ready y, entonces, puede ser despachada. En
+      definitiva, una Reservation Station termina siendo un gran buffer en el cual colocamos instrucciones.
+      Luego esta el common Data Bus (CDB) el cual conecta a todo el sistema, permitiendo que cada vez que una de las unidades funcionales devuelva un resultado,
+      esta pueda informarlo a todo el mundo via este CDB.
+
         ¿Qué elementos tiene una Reservation Station?
+       Un tag, un valor,y un bit de validez.
+
         ¿Cómo se establece la relación consumidor/productor según Tomasulo?¿Dónde está el tag o a qué hace referencia?
+        Con register Renaming. La idea es asociarle a cada operando una etiqueta (tag) que permita identificar al registro de la RS que contiene a la instruccion que producira su valor,
+        el cual conseguimos de la RAT (Register Alias Table), que almacena el ultimo tag de cada registro arquitectural.
+
         Detallar secuencia de pasos para ejecutar una instrucción.
+            Fetch:  La instrucci´on es fetcheada de la memoria de codigo, tipicamente en bloques de dos o m´as
+      instrucciones a la vez.
+            Issue: El procesador determina a cual RS debe despachar a la cabeza de la cola de instrucciones, basado en la unidad funcional que requiere la instruccion.
+      Si hay una Reservation Station correspondiente a la instruccion que este disponible, la instruccion es despachada a la misma, y 
+      se actualiza el tag del registro destino en la RAT. Si no contamos con una, estamos frente a un obstáculo
+      esctructural y la instruccion se stallea hasta que se haya vaciado algun espacio en la RS.
+      Execute:  Cuando todos los operandos esten disponibles y la unidad funcional correspondiente esta disponible para aceptar una nueva instruccion,
+      la operacion puede ser ejecutada. Sin embargo, como no tenemos ninguna estructura de HW que permita deshacer el efecto de ejecutar instrucciones,
+      ninguna instruccion puede iniciar su ejecuci´on hasta que todos los branches que la preceden sean completados. Esto reduce las ganancias de la prediccion de saltos.
+      Write result: Cuando el resultado est´e disponible, enviamos el valor junto con el tag de la RS que produjo el resultado (a traves del CDB),
+      permitiendo entregar el resultado al registro destino (entrada de la RAT) y a las Reservation Stations que esperaban el resultado.
 
     Reorder Buffer
         ¿Qué le faltó al algoritmo de Tomasulo para tener excepciones precisas?
