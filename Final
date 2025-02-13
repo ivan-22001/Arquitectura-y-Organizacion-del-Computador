@@ -189,5 +189,18 @@ Coherencia de Cache :
 
     Reorder Buffer
         ¿Qué le faltó al algoritmo de Tomasulo para tener excepciones precisas?
-        ¿Qué elementos tiene un reorder buffer?
+      Tomasulo una vez que tenia el resultado lo ponia en el registro directamente, en cambio cuando trabajamos con ejecucion especulativa, el banco 
+      de registros no es actualizado hasta el commit de los resultados de las instrucciones, osea que esas instrucciones sean validas algo que Tomasulo no verifica.
+      Lo que hace ROB es encargarse de mantener la ultima version de los registros, hasta que los resultados de las instrucciones anteriores sean commiteados al banco de registros.
+              
+      ¿Qué elementos tiene un reorder buffer?
+      Contiene el tipo de instruccion: indica si la instruccion se trata de un branch (no tiene operando destino), un store (destino direccion de memoria),
+      o una operacion en registros.
+      el campo destino: contiene el numero del registro o de la direccion de memoria en donde se guardara el resultado.
+      el campo valor: es usado para mantener el resultado de la instruccion hasta el commit.
+      el bit de Ready. indica si la ejecucion fue completada, indicando que el campo valor es valido.
+      
+
         Explicar la implementación de Intel del Algoritmo de Tomasulo en el Three Cores Engine, detallando cada parte involucrada.
+      Primero las lineas pasan por los decodificadores que las transforman en micro operaciones decodificadas llamadas uops, luego las uops se encolan y se envian al Register Alias Table
+      que se encarga de traducir los registros arquitecturales en registros virtuales, internos del procesador, implementando el Register Ranaming de Tomasulo.
