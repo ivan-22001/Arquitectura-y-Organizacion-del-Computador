@@ -1,7 +1,7 @@
 Coherencia de Cache :
       - Explicar cuándo empezamos a tener problemas con la coherencia y cuál es el problema de tener incoherentes la memoria con las caches.
-        Empezamos a tener problemas de coherencia a la hora de escribir sobre una variable, ya que su valor se va a modificar y en el resto de los niveles inferiores de jerarquia dejara de cumplirse 
-        la coherencia.
+        Empezamos a tener problemas de coherencia a la hora de escribir sobre una variable, ya que su valor se va a modificar y en el resto de los niveles inferiores de jerarquia dejara
+        de cumplirse la coherencia.
         El problema de coherencia surge cuando varias cachés (asociadas a diferentes núcleos o procesadores) tienen copias del mismo bloque de memoria,
         y al menos una de ellas realiza una escritura. Si no se gestiona adecuadamente, esto puede llevar a inconsistencias en los datos,
         lo que afecta la correcta ejecución de los programas.
@@ -15,7 +15,8 @@ Coherencia de Cache :
       
        - Explicar cómo se podría utilizar Copy Back en un sistema SMP.
         Se necesitarian protocolos de coherencia para poder realizar el copy back.
-        Para resolver el problema de coherencia, se utilizan protocolos como MESI (Modified, Exclusive, Shared, Invalid) o MOESI (Modified, Owned, Exclusive, Shared, Invalid). Estos protocolos definen el estado de cada bloque de caché y coordinan las operaciones de lectura y escritura entre los núcleos.
+        Para resolver el problema de coherencia, se utilizan protocolos como MESI (Modified, Exclusive, Shared, Invalid) o MOESI (Modified, Owned, Exclusive, Shared, Invalid).
+        Estos protocolos definen el estado de cada bloque de caché y coordinan las operaciones de lectura y escritura entre los núcleos.
         Estados del protocolo MESI:
     Modified (M): Modified significa que la lı́nea ha sido modificada en el Cache local. Como este protocolo es write-invalidate, éste estado es además
     Exclusivo.
@@ -40,8 +41,10 @@ Coherencia de Cache :
             El snooping permite que cada procesador observe las transacciones en el bus y actualice el estado de sus líneas de caché según el protocolo MESI.
             Por ejemplo, si un procesador escribe en una dirección de memoria, el snooping detecta esta operación y notifica a otros procesadores que tienen esa línea en su caché, 
             cambiando su estado a Invalid (I) si es necesario. 
-            Hay que agregar el snoop bus. Los bits de estado para aplicar el protocolo MES;     Se necesita hardware adicional en el controlador de caché para implementar la lógica del protocolo MESI.
-            Esto incluye la capacidad de cambiar el estado de las líneas de caché y generar las señales necesarias en el bus (por ejemplo, para solicitar una línea en estado Shared o Invalid).
+            Hay que agregar el snoop bus. Los bits de estado para aplicar el protocolo MES; Se necesita hardware adicional en el controlador de caché para implementar 
+            la lógica del protocolo MESI.
+            Esto incluye la capacidad de cambiar el estado de las líneas de caché y generar las señales necesarias en el bus
+            (por ejemplo, para solicitar una línea en estado Shared o Invalid).
             Operaciones RFO (Read For Ownership): Cuando un procesador necesita escribir en una línea de caché que está en estado Shared o Invalid, debe realizar una operación RFO.
 
         -En el protocolo MESI, ¿qué significa el estado Modified?
@@ -61,7 +64,8 @@ Coherencia de Cache :
 
     -¿Qué pasa si un procesador escribe en una linea con Modified?
     ¿Cómo afecta a la performance si se usa un protocolo con Write/copy back comparado con Write through?
-      Cuando un procesador escribe en una línea de caché marcada como Modified, esto significa que la copia de la línea en la caché ha sido modificada en relación con la copia en la memoria principal. 
+      Cuando un procesador escribe en una línea de caché marcada como Modified, esto significa que la copia de la línea en la caché ha sido modificada en relación con la copia 
+      en la memoria principal. 
       Según los protocolos de coherencia de caché, una línea de caché se marca como Modified (M) cuando ha sido escrita en la caché,
       y la memoria principal no tiene la versión actualizada de esa línea. 
       Esto indica que la línea en la caché está sucia y debe escribirse de vuelta en la memoria cuando se realice una actualización o cuando la caché sea reemplazada.
@@ -151,8 +155,8 @@ Coherencia de Cache :
     Algoritmo de Tomasulo
         ¿Cuándo se debe stallear una instrucción?
        Cuando haya algun hazard, ya sea obstaculos estructurales, de datos o control. Ya que la instruccion no se puede llevar a cabo por dependencias. 
-      De datos seria algun dato que necesita de instruccion anterior y modifica al operando y usa ese mismo, estructural cuando dos instrucciones intentan acceder a la memoria al mismo tiempo
-      y control cuando hay una mala prediccion de salto.
+      De datos seria algun dato que necesita de instruccion anterior y modifica al operando y usa ese mismo, estructural cuando dos instrucciones intentan acceder
+      a la memoria al mismo tiempo y control cuando hay una mala prediccion de salto.
       
         Explicar cuáles son los bloques de hardware que se agregan a un procesador superescalar, qué riesgos resuelve, y cómo funciona cada uno.
       Se agregan un banco de register alias table(RAT) y reservations stations(RS) el cual resuelve los riesgos de WAW, WAR. Estos funcionan de la siguiente manera
