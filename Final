@@ -72,7 +72,7 @@ Coherencia de Cache :
     
     Predicción de Saltos :
         ¿Cómo funciona un predictor de saltos de 2 bits? Motivación y funcionamiento. Incluir diagrama y transiciones de estado.
-        Se implemento este modeo para mejorar el rendimiento del Branch Prediction Buffer 
+        Se implemento este modo para mejorar el rendimiento del Branch Prediction Buffer 
         ya que su modelo inicial era prediccion simple de a un bit que lo limitaba porque cuando un salto siempre
         resulta taken, y falla una vez produce dos predicciones fallidas seguidas, ya que el bit
         se invierte.
